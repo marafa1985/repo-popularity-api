@@ -1,6 +1,7 @@
 import express from "express";
 import { InMemoryCache } from "./shared/cache/InMemoryCache";
 import { WinstonLogger } from "./shared/logger/WinstonLogger";
+import { env } from "./config/env";
 
 const logger = new WinstonLogger();
 const cache = new InMemoryCache<string>();
@@ -14,8 +15,8 @@ app.get("/health", (_request, response) => {
 cache.set("test", "test Value");
 logger.info(cache.get("test") ?? "No value found");
 
-app.listen(3000, () => {
+app.listen(env.PORT, () => {
   logger.info(
-    "Server is running on port 3000, open http://localhost:3000 to view it in the browser.",
+    `Server is running on port ${env.PORT}, open http://localhost:${env.PORT} to view it in the browser.`,
   );
 });
