@@ -5,6 +5,8 @@ const envSchema = z.object({
   CACHE_TTL_SECONDS: z.coerce.number().default(300),
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
   LOG_DIR: z.string().default("./logs"),
+  GITHUB_API_URL: z.string().default("https://api.github.com"),
+  GITHUB_TIMEOUT_MS: z.coerce.number().default(5000),
 });
 
 type AppEnv = z.infer<typeof envSchema>;

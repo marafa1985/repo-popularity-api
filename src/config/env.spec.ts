@@ -7,6 +7,8 @@ describe("loadEnv", () => {
       CACHE_TTL_SECONDS: 300,
       LOG_LEVEL: "info",
       LOG_DIR: "./logs",
+      GITHUB_API_URL: "https://api.github.com",
+      GITHUB_TIMEOUT_MS: 5000,
     });
   });
 });

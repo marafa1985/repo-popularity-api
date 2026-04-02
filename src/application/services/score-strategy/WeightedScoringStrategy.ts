@@ -1,6 +1,6 @@
 import type { Repository } from "@/application/domain/entities/Repository";
 
-export class WeightedScoringAlgorithm {
+export class WeightedScoringStrategy {
   // Stars are the strongest popularity signal, so they carry half the score.
   private static readonly STAR_WEIGHT = 0.5;
   // Forks matter, but usually trail stars, so they get a smaller share.
@@ -16,18 +16,18 @@ export class WeightedScoringAlgorithm {
   score(repository: Repository): number {
     const starsScore = this.normalizeLogScale(
       repository.stars,
-      WeightedScoringAlgorithm.STAR_SCALE,
+      WeightedScoringStrategy.STAR_SCALE,
     );
     const forksScore = this.normalizeLogScale(
       repository.forks,
-      WeightedScoringAlgorithm.FORK_SCALE,
+      WeightedScoringStrategy.FORK_SCALE,
     );
     const recencyScore = this.calculateRecencyScore(repository.updatedAt);
 
     const weightedScore =
-      starsScore * WeightedScoringAlgorithm.STAR_WEIGHT +
-      forksScore * WeightedScoringAlgorithm.FORK_WEIGHT +
-      recencyScore * WeightedScoringAlgorithm.RECENCY_WEIGHT;
+      starsScore * WeightedScoringStrategy.STAR_WEIGHT +
+      forksScore * WeightedScoringStrategy.FORK_WEIGHT +
+      recencyScore * WeightedScoringStrategy.RECENCY_WEIGHT;
 
     return Number((weightedScore * 100).toFixed(2));
   }
@@ -42,7 +42,7 @@ export class WeightedScoringAlgorithm {
     const ageInDays =
       (Date.now() - updatedAtDate.getTime()) / (1000 * 60 * 60 * 24);
     const decayBase =
-      Math.log(2) / WeightedScoringAlgorithm.RECENCY_HALF_LIFE_DAYS;
+      Math.log(2) / WeightedScoringStrategy.RECENCY_HALF_LIFE_DAYS;
 
     return Math.exp(-decayBase * Math.max(ageInDays, 0));
   }
