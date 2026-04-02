@@ -1,0 +1,13 @@
+@baseUrl = http://localhost:3000
+@language = TypeScript
+@createdAfter = 2024-01-01
+
+
+### Health
+GET {{baseUrl}}/health
+
+### Search Repositories
+GET {{baseUrl}}/api/v1/repositories/popularity?language={{language}}&createdAfter={{createdAfter}}&page=1&perPage=20
+Accept: application/json
+
+

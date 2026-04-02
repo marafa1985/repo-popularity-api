@@ -12,7 +12,6 @@ import type {
   GitHubRepositoryDTO,
   GitHubSearchResponseDTO,
 } from "./dto/GitHubRepositoryDTO";
-import { env } from "@/config/env";
 
 export type GitHubClientHttpOptions = {
   baseURL?: string;
@@ -27,9 +26,8 @@ export class GitHubClient {
     httpOptions?: GitHubClientHttpOptions,
   ) {
     this.httpClient = axios.create({
-      baseURL:
-        httpOptions?.baseURL ?? env.GITHUB_API_URL ?? "https://api.github.com",
-      timeout: httpOptions?.timeoutMs ?? env.GITHUB_TIMEOUT_MS ?? 5_000,
+      baseURL: httpOptions?.baseURL ?? "https://api.github.com",
+      timeout: httpOptions?.timeoutMs ?? 5_000,
       headers: {
         Accept: "application/vnd.github+json",
         "User-Agent": "score-github",

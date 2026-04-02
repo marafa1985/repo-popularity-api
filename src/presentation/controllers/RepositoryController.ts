@@ -1,11 +1,19 @@
 import type { SearchRepositoriesInput } from "@/application/dto/SearchRepositoriesInput";
 import type { Request, Response } from "express";
+import { SearchPopularRepositoriesService } from "@/application/services/SearchPopularRepositoriesService";
 
 export class RepositoryController {
-  search = async (
+  constructor(
+    private readonly searchPopularRepositoriesService: SearchPopularRepositoriesService,
+  ) {}
+
+  async search(
     request: Request<unknown, unknown, unknown, SearchRepositoriesInput>,
     response: Response,
-  ): Promise<void> => {
-    response.json({ message: "Hello, world!", query: request.query });
-  };
+  ): Promise<void> {
+    const repositories = await this.searchPopularRepositoriesService.execute(
+      request.query,
+    );
+    response.json(repositories);
+  }
 }

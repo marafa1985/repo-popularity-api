@@ -1,11 +1,14 @@
 import { Router } from "express";
 import { RepositoryController } from "@/presentation/controllers/RepositoryController";
+import { SearchPopularRepositoriesService } from "@/application/services/SearchPopularRepositoriesService";
 
-export function createRepositoryRoutes(): Router {
+export function createRepositoryRoutes(
+  searchPopularRepositoriesService: SearchPopularRepositoriesService,
+): Router {
   const router = Router();
-  const controller = new RepositoryController();
+  const controller = new RepositoryController(searchPopularRepositoriesService);
 
-  router.get("/popularity", controller.search);
+  router.get("/popularity", controller.search.bind(controller));
 
   return router;
 }
