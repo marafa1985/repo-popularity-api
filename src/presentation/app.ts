@@ -15,7 +15,6 @@ export function createApp(
   logger: ILogger,
 ) {
   const app = express();
-  app.use(limiter);
   app.use(express.json());
   app.use(createRequestLogger(logger));
   app.get("/health", (_request, response) => {
@@ -23,6 +22,7 @@ export function createApp(
   });
   app.use(
     "/api/v1/repositories/",
+    limiter,
     createRepositoryRoutes(searchPopularRepositoriesService),
   );
 
