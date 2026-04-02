@@ -1,8 +1,11 @@
+import "dotenv/config";
+
 import { z } from "zod";
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   CACHE_TTL_SECONDS: z.coerce.number().default(300),
+  CACHE_MAX_ENTRIES: z.coerce.number().min(1).default(5000),
   LOG_LEVEL: z.enum(["error", "warn", "info", "debug"]).default("info"),
   LOG_DIR: z.string().default("./logs"),
   GITHUB_API_URL: z.string().default("https://api.github.com"),

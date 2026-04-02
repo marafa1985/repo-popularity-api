@@ -35,7 +35,7 @@ const app = createApp(
   rateLimiterOptions,
 );
 
-app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, () => {
   logger.info(
     `Server is running on port ${env.PORT}, open http://localhost:${env.PORT} to view it in the browser.`,
   );
@@ -43,3 +43,18 @@ app.listen(env.PORT, () => {
     `- Open http://localhost:${env.PORT}/api-docs for API documentation.`,
   );
 });
+
+function shutdown(signal: string): void {
+  logger.info(`Received ${signal}, closing HTTP server`);
+  server.close(() => {
+    logger.info("HTTP server closed");
+    process.exit(0);
+  });
+  setTimeout(() => {
+    logger.error("Forced shutdown after timeout");
+    process.exit(1);
+  }, 10_000).unref();
+}
+
+process.once("SIGTERM", () => shutdown("SIGTERM"));
+process.once("SIGINT", () => shutdown("SIGINT"));

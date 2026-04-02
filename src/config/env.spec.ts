@@ -5,6 +5,7 @@ describe("loadEnv", () => {
     expect(env).toMatchObject({
       PORT: 3000,
       CACHE_TTL_SECONDS: 300,
+      CACHE_MAX_ENTRIES: 5000,
       LOG_LEVEL: "info",
       LOG_DIR: "./logs",
       GITHUB_API_URL: "https://api.github.com",
