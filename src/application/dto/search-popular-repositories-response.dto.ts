@@ -1,6 +1,6 @@
-import { ScoredRepository } from "@/application/domain/entities/ScoredRepository";
+import { ScoredRepository } from "@/application/domain/entities/scored-repository";
 
-export interface SearchPopularRepositoriesResponse {
+export interface SearchPopularRepositoriesResponseDto {
   filters: {
     createdAfter: string;
     language: string;

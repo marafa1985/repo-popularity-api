@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { ValidationError } from "@/application/domain/errors/ApplicationError";
+import { ValidationError } from "@/application/domain/errors/application.error";
 
 const utcTodayIsoDate = (): string => new Date().toISOString().slice(0, 10);
 
-export const searchRepositoriesInputSchema = z.object({
+export const searchRepositoriesQuerySchema = z.object({
   createdAfter: z.iso
     .date({
       error:
@@ -35,14 +35,14 @@ export const searchRepositoriesInputSchema = z.object({
     .min(1, 'Query parameter "perPage" must be greater than or equal to 1.'),
 });
 
-export type SearchRepositoriesInput = z.infer<
-  typeof searchRepositoriesInputSchema
+export type SearchRepositoriesQueryDto = z.infer<
+  typeof searchRepositoriesQuerySchema
 >;
 
 export const validateSearchRepositoriesInput = (
   query: unknown,
-): SearchRepositoriesInput => {
-  const parsedQuery = searchRepositoriesInputSchema.safeParse(query);
+): SearchRepositoriesQueryDto => {
+  const parsedQuery = searchRepositoriesQuerySchema.safeParse(query);
   if (parsedQuery.success) {
     return parsedQuery.data;
   }

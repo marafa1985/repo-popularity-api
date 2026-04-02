@@ -1,4 +1,4 @@
-import type { Repository } from "@/application/domain/entities/Repository";
+import type { Repository } from "@/application/domain/entities/repository";
 
 export class WeightedScoringStrategy {
   // Stars are the strongest popularity signal, so they carry half the score.

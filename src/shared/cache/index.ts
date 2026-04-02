@@ -1,1 +1,1 @@
-export * from "./InMemoryCache";
+export * from "./in-memory-cache.service";

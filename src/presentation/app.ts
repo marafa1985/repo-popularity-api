@@ -1,6 +1,6 @@
 import express from "express";
-import { createRepositoryRoutes } from "@/presentation/routes/repositoryRoutes";
-import { SearchPopularRepositoriesService } from "@/application/services/SearchPopularRepositoriesService";
+import { createRepositoryRoutes } from "@/presentation/routes/repository.routes";
+import { SearchPopularRepositoriesService } from "@/application/services/search-popular-repositories.service";
 
 export function createApp(
   searchPopularRepositoriesService: SearchPopularRepositoriesService,

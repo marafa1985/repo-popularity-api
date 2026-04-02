@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { RepositoryController } from "@/presentation/controllers/RepositoryController";
-import { SearchPopularRepositoriesService } from "@/application/services/SearchPopularRepositoriesService";
+import { RepositoryController } from "@/presentation/controllers/repository.controller";
+import { SearchPopularRepositoriesService } from "@/application/services/search-popular-repositories.service";
 
 export function createRepositoryRoutes(
   searchPopularRepositoriesService: SearchPopularRepositoriesService,

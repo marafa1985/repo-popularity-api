@@ -1,15 +1,13 @@
 import type { ICache } from "@/application/ports/ICache";
-import type { CacheEntry } from "./CacheEntry";
+import type { CacheEntry } from "./cache-entry";
 import { env } from "@/config/env";
 
-export class InMemoryCache<T> implements ICache<T> {
+export class InMemoryCacheService<T> implements ICache<T> {
   private readonly store = new Map<string, CacheEntry<T>>();
   private readonly ttlMs: number;
-  private readonly maxSize: number;
 
   constructor() {
     this.ttlMs = (env.CACHE_TTL_SECONDS ?? 300) * 1000;
-    this.maxSize = 500;
   }
 
   get(key: string): T | undefined {

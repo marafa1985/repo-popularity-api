@@ -1,6 +1,6 @@
-import type { SearchRepositoriesInput } from "@/application/dto/SearchRepositoriesInput";
+import type { SearchRepositoriesQueryDto } from "@/application/dto/search-repositories-query.dto";
 import type { Request, Response } from "express";
-import { SearchPopularRepositoriesService } from "@/application/services/SearchPopularRepositoriesService";
+import { SearchPopularRepositoriesService } from "@/application/services/search-popular-repositories.service";
 
 export class RepositoryController {
   constructor(
@@ -8,7 +8,7 @@ export class RepositoryController {
   ) {}
 
   async search(
-    request: Request<unknown, unknown, unknown, SearchRepositoriesInput>,
+    request: Request<unknown, unknown, unknown, SearchRepositoriesQueryDto>,
     response: Response,
   ): Promise<void> {
     const repositories = await this.searchPopularRepositoriesService.execute(

@@ -1,4 +1,4 @@
-import { WeightedScoringStrategy } from "./WeightedScoringStrategy";
+import { WeightedScoringStrategy } from "./weighted-scoring.strategy";
 
 describe("WeightedScoringAlgorithm", () => {
   const FIXED_NOW = new Date("2026-04-01T00:00:00.000Z").getTime();

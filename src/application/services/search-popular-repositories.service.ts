@@ -1,15 +1,15 @@
 import {
   validateSearchRepositoriesInput,
-  type SearchRepositoriesInput,
-} from "@/application/dto/SearchRepositoriesInput";
-import type { SearchPopularRepositoriesResponse } from "@/application/dto/SearchPopularRepositoriesResponse";
-import type { SearchRepositoriesResponse } from "@/application/dto/SearchRepositoriesResponse";
-import type { Repository } from "@/application/domain/entities/Repository";
+  type SearchRepositoriesQueryDto,
+} from "@/application/dto/search-repositories-query.dto";
+import type { SearchPopularRepositoriesResponseDto } from "@/application/dto/search-popular-repositories-response.dto";
+import type { SearchRepositoriesResponse } from "@/application/dto/scored-repository.dto";
+import type { Repository } from "@/application/domain/entities/repository";
 import { ILogger } from "../ports/ILogger";
 
 type RepositorySearchClient = {
   searchRepositories(
-    query: SearchRepositoriesInput,
+    query: SearchRepositoriesQueryDto,
   ): Promise<SearchRepositoriesResponse>;
 };
 
@@ -25,8 +25,8 @@ export class SearchPopularRepositoriesService {
   ) {}
 
   async execute(
-    query: SearchRepositoriesInput,
-  ): Promise<SearchPopularRepositoriesResponse> {
+    query: SearchRepositoriesQueryDto,
+  ): Promise<SearchPopularRepositoriesResponseDto> {
     const parsedQuery = this.validateQuery(query);
 
     this.logSearchRepositoriesInfo(parsedQuery);
@@ -41,7 +41,7 @@ export class SearchPopularRepositoriesService {
       }))
       .sort((left, right) => right.popularityScore - left.popularityScore);
 
-    const response: SearchPopularRepositoriesResponse = {
+    const response: SearchPopularRepositoriesResponseDto = {
       filters: {
         createdAfter: parsedQuery.createdAfter,
         language: parsedQuery.language,
@@ -63,8 +63,8 @@ export class SearchPopularRepositoriesService {
   }
 
   private validateQuery(
-    query: SearchRepositoriesInput,
-  ): SearchRepositoriesInput {
+    query: SearchRepositoriesQueryDto,
+  ): SearchRepositoriesQueryDto {
     try {
       return validateSearchRepositoriesInput(query);
     } catch (error) {
@@ -78,7 +78,7 @@ export class SearchPopularRepositoriesService {
     }
   }
 
-  private logSearchRepositoriesInfo(query: SearchRepositoriesInput): void {
+  private logSearchRepositoriesInfo(query: SearchRepositoriesQueryDto): void {
     this.logger.info("Fetching repositories from search client", {
       clientId: "github",
       language: query.language,

@@ -1,17 +1,17 @@
-import type { SearchRepositoriesInput } from "@/application/dto/SearchRepositoriesInput";
+import type { SearchRepositoriesQueryDto } from "@/application/dto/search-repositories-query.dto";
 import axios from "axios";
 
 import type { ILogger } from "@/application/ports/ILogger";
-import type { SearchRepositoriesResponse } from "@/application/dto/SearchRepositoriesResponse";
-import type { Repository } from "@/application/domain/entities/Repository";
+import type { SearchRepositoriesResponse } from "@/application/dto/scored-repository.dto";
+import type { Repository } from "@/application/domain/entities/repository";
 import {
   GitHubApiError,
   RateLimitError,
-} from "@/application/domain/errors/ApplicationError";
+} from "@/application/domain/errors/application.error";
 import type {
   GitHubRepositoryDTO,
   GitHubSearchResponseDTO,
-} from "./dto/GitHubRepositoryDTO";
+} from "./dto/github-repository.dto";
 
 export type GitHubClientHttpOptions = {
   baseURL?: string;
@@ -37,7 +37,7 @@ export class GitHubClient {
   }
 
   async searchRepositories(
-    query: SearchRepositoriesInput,
+    query: SearchRepositoriesQueryDto,
   ): Promise<SearchRepositoriesResponse> {
     try {
       const response = await this.httpClient.get<GitHubSearchResponseDTO>(

@@ -1,15 +1,15 @@
 import nock from "nock";
 
 import type { ILogger } from "@/application/ports/ILogger";
-import type { SearchRepositoriesInput } from "@/application/dto/SearchRepositoriesInput";
-import { RateLimitError } from "@/application/domain/errors/ApplicationError";
+import type { SearchRepositoriesQueryDto } from "@/application/dto/search-repositories-query.dto";
+import { RateLimitError } from "@/application/domain/errors/application.error";
 
-import { GitHubClient } from "./GitHubClient";
+import { GitHubClient } from "./github.client";
 
 const TEST_BASE_URL = "https://github-api.test";
 
 describe("GitHubClient", () => {
-  const query: SearchRepositoriesInput = {
+  const query: SearchRepositoriesQueryDto = {
     createdAfter: "2026-03-01",
     language: "TypeScript",
     page: 1,

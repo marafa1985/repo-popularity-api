@@ -1,13 +1,13 @@
-import { InMemoryCache } from "./shared/cache/InMemoryCache";
+import { InMemoryCacheService } from "./shared/cache/in-memory-cache.service";
 import { WinstonLogger } from "./shared/logger/WinstonLogger";
 import { env } from "./config/env";
 import { createApp } from "./presentation/app";
-import { GitHubClient } from "./application/services/repository-clients/github/GitHubClient";
-import { WeightedScoringStrategy } from "./application/services/score-strategy/WeightedScoringStrategy";
-import { SearchPopularRepositoriesService } from "./application/services/SearchPopularRepositoriesService";
+import { GitHubClient } from "./application/services/repository-clients/github/github.client";
+import { WeightedScoringStrategy } from "./application/services/score-strategy/weighted-scoring.strategy";
+import { SearchPopularRepositoriesService } from "./application/services/search-popular-repositories.service";
 
 const logger = new WinstonLogger();
-const cache = new InMemoryCache<string>();
+const cache = new InMemoryCacheService<string>();
 
 const githubClient = new GitHubClient(logger, {
   baseURL: env.GITHUB_API_URL,
