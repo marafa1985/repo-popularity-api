@@ -89,6 +89,24 @@ describe("WeightedScoringAlgorithm", () => {
     expect(recentScore).toBeGreaterThan(staleScore);
   });
 
+  it("returns a finite score when updatedAt cannot be parsed as a date", () => {
+    const algorithm = new WeightedScoringStrategy();
+
+    const score = algorithm.score({
+      id: 1,
+      name: "broken-date",
+      fullName: "owner/broken-date",
+      url: "https://github.com/owner/broken-date",
+      description: null,
+      language: "TypeScript",
+      stars: 100,
+      forks: 20,
+      updatedAt: "not-a-date",
+    });
+
+    expect(Number.isFinite(score)).toBe(true);
+  });
+
   it("treats future timestamps as fully recent instead of penalizing them", () => {
     const algorithm = new WeightedScoringStrategy();
 

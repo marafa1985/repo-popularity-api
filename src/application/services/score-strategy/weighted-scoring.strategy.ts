@@ -29,7 +29,8 @@ export class WeightedScoringStrategy {
       forksScore * WeightedScoringStrategy.FORK_WEIGHT +
       recencyScore * WeightedScoringStrategy.RECENCY_WEIGHT;
 
-    return Number((weightedScore * 100).toFixed(2));
+    const scaled = Number((weightedScore * 100).toFixed(2));
+    return Number.isFinite(scaled) ? scaled : 0;
   }
 
   private normalizeLogScale(value: number, scale: number): number {
@@ -39,6 +40,9 @@ export class WeightedScoringStrategy {
 
   private calculateRecencyScore(updatedAt: string): number {
     const updatedAtDate = new Date(updatedAt);
+    if (Number.isNaN(updatedAtDate.getTime())) {
+      return 0;
+    }
     const ageInDays =
       (Date.now() - updatedAtDate.getTime()) / (1000 * 60 * 60 * 24);
     const decayBase =

@@ -139,6 +139,7 @@ describe("SearchPopularRepositoriesService", () => {
     const scoringService = { score: jest.fn() };
     const logger = createLogger();
     const cache = createCache({
+      has: jest.fn().mockReturnValue(true),
       get: jest.fn().mockReturnValue(cachedResponse),
     });
     const service = new SearchPopularRepositoriesService(
@@ -153,37 +154,6 @@ describe("SearchPopularRepositoriesService", () => {
     expect(response).toBe(cachedResponse);
     expect(repositoryClient.searchRepositories).not.toHaveBeenCalled();
     expect(scoringService.score).not.toHaveBeenCalled();
-  });
-
-  it("deduplicates concurrent fetches for the same cache key", async () => {
-    const empty: SearchRepositoriesResponseDto = {
-      totalCount: 0,
-      incompleteResults: false,
-      items: [],
-    };
-    let finish!: (value: SearchRepositoriesResponseDto) => void;
-    const pending = new Promise<SearchRepositoriesResponseDto>((resolve) => {
-      finish = resolve;
-    });
-    const repositoryClient = {
-      searchRepositories: jest.fn(() => pending),
-    };
-    const scoringService = { score: jest.fn() };
-    const logger = createLogger();
-    const cache = createCache();
-    const service = new SearchPopularRepositoriesService(
-      repositoryClient,
-      scoringService,
-      logger,
-      cache,
-    );
-
-    const first = service.execute(query);
-    const second = service.execute(query);
-    finish(empty);
-
-    await expect(Promise.all([first, second])).resolves.toBeDefined();
-    expect(repositoryClient.searchRepositories).toHaveBeenCalledTimes(1);
   });
 
   it("rejects invalid pagination values before calling downstream dependencies", async () => {

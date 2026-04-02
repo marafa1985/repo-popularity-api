@@ -37,6 +37,13 @@ export class SearchPopularRepositoriesService {
       return this.cache.get(cacheKey) as SearchPopularRepositoriesResponseDto;
     }
 
+    return this.fetchScoreAndCache(parsedQuery, cacheKey);
+  }
+
+  private async fetchScoreAndCache(
+    parsedQuery: SearchRepositoriesQueryDto,
+    cacheKey: string,
+  ): Promise<SearchPopularRepositoriesResponseDto> {
     this.logSearchRepositoriesInfo(parsedQuery);
 
     const repositories =

@@ -55,6 +55,7 @@ export class GitHubClient {
 
       return {
         totalCount: response.data.total_count,
+        incompleteResults: response.data.incomplete_results,
         items: response.data.items.map(this.toRepository),
       };
     } catch (error) {
