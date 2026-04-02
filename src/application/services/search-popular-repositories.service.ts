@@ -5,8 +5,8 @@ import {
 import type { SearchPopularRepositoriesResponseDto } from "@/application/dto/search-popular-repositories-response.dto";
 import type { SearchRepositoriesResponseDto } from "@/application/dto/scored-repository.dto";
 import type { Repository } from "@/application/domain/entities/repository";
-import { ILogger } from "../ports/ILogger";
-import { ICache } from "../ports/ICache";
+import type { ILogger } from "@/application/ports/ILogger";
+import type { ICache } from "@/application/ports/ICache";
 
 type RepositorySearchClient = {
   searchRepositories(
@@ -61,6 +61,7 @@ export class SearchPopularRepositoriesService {
         returnedCount: scoredRepositories.length,
       },
       items: scoredRepositories,
+      incompleteResults: repositories.incompleteResults,
     };
 
     this.cache.set(cacheKey, response);

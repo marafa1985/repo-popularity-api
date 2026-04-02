@@ -1,6 +1,6 @@
 import type { SearchPopularRepositoriesResponseDto } from "../dto/search-popular-repositories-response.dto";
 import type { SearchRepositoriesQueryDto } from "../dto/search-repositories-query.dto";
-import { SearchRepositoriesResponseDto } from "../dto/scored-repository.dto";
+import type { SearchRepositoriesResponseDto } from "../dto/scored-repository.dto";
 import type { ICache } from "../ports/ICache";
 import type { ILogger } from "../ports/ILogger";
 import type { Repository } from "../domain/entities/repository";
@@ -14,6 +14,7 @@ class FakeRepositoryClient {
   constructor(
     private readonly response: SearchRepositoriesResponseDto = {
       totalCount: 0,
+      incompleteResults: false,
       items: [],
     },
   ) {}
@@ -39,9 +40,9 @@ describe("SearchPopularRepositoriesService", () => {
   const createCache = (
     overrides: Partial<ICache<SearchPopularRepositoriesResponseDto>> = {},
   ): ICache<SearchPopularRepositoriesResponseDto> => ({
-    has: jest.fn().mockReturnValue(false),
     get: jest.fn(),
     set: jest.fn(),
+    has: jest.fn().mockReturnValue(false),
     delete: jest.fn(),
     clear: jest.fn(),
     ...overrides,
@@ -74,6 +75,7 @@ describe("SearchPopularRepositoriesService", () => {
     ];
     const repositoryClient = new FakeRepositoryClient({
       totalCount: 5_000,
+      incompleteResults: true,
       items: repositories,
     });
     const scoringService = {
@@ -101,6 +103,7 @@ describe("SearchPopularRepositoriesService", () => {
     ]);
     expect(response.pagination.totalCount).toBe(5_000);
     expect(response.pagination.returnedCount).toBe(2);
+    expect(response.incompleteResults).toBe(true);
     expect(cache.set).toHaveBeenCalledWith(buildCacheKey(query), response);
   });
 
@@ -130,12 +133,12 @@ describe("SearchPopularRepositoriesService", () => {
           popularityScore: 77,
         },
       ],
+      incompleteResults: false,
     };
     const repositoryClient = new FakeRepositoryClient();
     const scoringService = { score: jest.fn() };
     const logger = createLogger();
     const cache = createCache({
-      has: jest.fn().mockReturnValue(true),
       get: jest.fn().mockReturnValue(cachedResponse),
     });
     const service = new SearchPopularRepositoriesService(
@@ -150,6 +153,37 @@ describe("SearchPopularRepositoriesService", () => {
     expect(response).toBe(cachedResponse);
     expect(repositoryClient.searchRepositories).not.toHaveBeenCalled();
     expect(scoringService.score).not.toHaveBeenCalled();
+  });
+
+  it("deduplicates concurrent fetches for the same cache key", async () => {
+    const empty: SearchRepositoriesResponseDto = {
+      totalCount: 0,
+      incompleteResults: false,
+      items: [],
+    };
+    let finish!: (value: SearchRepositoriesResponseDto) => void;
+    const pending = new Promise<SearchRepositoriesResponseDto>((resolve) => {
+      finish = resolve;
+    });
+    const repositoryClient = {
+      searchRepositories: jest.fn(() => pending),
+    };
+    const scoringService = { score: jest.fn() };
+    const logger = createLogger();
+    const cache = createCache();
+    const service = new SearchPopularRepositoriesService(
+      repositoryClient,
+      scoringService,
+      logger,
+      cache,
+    );
+
+    const first = service.execute(query);
+    const second = service.execute(query);
+    finish(empty);
+
+    await expect(Promise.all([first, second])).resolves.toBeDefined();
+    expect(repositoryClient.searchRepositories).toHaveBeenCalledTimes(1);
   });
 
   it("rejects invalid pagination values before calling downstream dependencies", async () => {
@@ -175,5 +209,47 @@ describe("SearchPopularRepositoriesService", () => {
 
     expect(repositoryClient.searchRepositories).not.toHaveBeenCalled();
     expect(scoringService.score).not.toHaveBeenCalled();
+  });
+
+  it("rejects pages beyond GitHub first 1000 results", async () => {
+    const repositoryClient = new FakeRepositoryClient();
+    const service = new SearchPopularRepositoriesService(
+      repositoryClient,
+      { score: jest.fn() },
+      createLogger(),
+      createCache(),
+    );
+
+    await expect(
+      service.execute({
+        createdAfter: "2026-03-01",
+        language: "TypeScript",
+        page: 101,
+        perPage: 10,
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+
+    expect(repositoryClient.searchRepositories).not.toHaveBeenCalled();
+  });
+
+  it("rejects perPage above 100", async () => {
+    const repositoryClient = new FakeRepositoryClient();
+    const service = new SearchPopularRepositoriesService(
+      repositoryClient,
+      { score: jest.fn() },
+      createLogger(),
+      createCache(),
+    );
+
+    await expect(
+      service.execute({
+        createdAfter: "2026-03-01",
+        language: "TypeScript",
+        page: 1,
+        perPage: 101,
+      }),
+    ).rejects.toBeInstanceOf(ValidationError);
+
+    expect(repositoryClient.searchRepositories).not.toHaveBeenCalled();
   });
 });

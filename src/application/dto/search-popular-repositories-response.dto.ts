@@ -12,4 +12,5 @@ export interface SearchPopularRepositoriesResponseDto {
     returnedCount: number;
   };
   items: ScoredRepository[];
+  incompleteResults: boolean;
 }
