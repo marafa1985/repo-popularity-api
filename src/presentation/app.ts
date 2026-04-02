@@ -5,14 +5,16 @@ import { SearchPopularRepositoriesService } from "@/application/services/search-
 import { ILogger } from "@/application/ports/ILogger";
 import {
   createRequestLogger,
-  limiter,
+  createRepositoryRateLimiter,
   createErrorHandler,
+  type RateLimiterOptions,
 } from "./middlewares";
 import { openApiDocument } from "./openapi/open-api-document";
 
 export function createApp(
   searchPopularRepositoriesService: SearchPopularRepositoriesService,
   logger: ILogger,
+  rateLimiter?: RateLimiterOptions,
 ) {
   const app = express();
   app.use(express.json());
@@ -22,7 +24,11 @@ export function createApp(
   });
   app.use(
     "/api/v1/repositories/",
-    limiter,
+    createRepositoryRateLimiter(
+      rateLimiter?.windowMs,
+      rateLimiter?.maxRequests,
+      logger,
+    ),
     createRepositoryRoutes(searchPopularRepositoriesService),
   );
 

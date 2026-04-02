@@ -6,17 +6,21 @@ import { GitHubClient } from "./application/services/repository-clients/github/g
 import { WeightedScoringStrategy } from "./application/services/score-strategy/weighted-scoring.strategy";
 import { SearchPopularRepositoriesService } from "./application/services/search-popular-repositories.service";
 import { SearchPopularRepositoriesResponseDto } from "./application/dto/search-popular-repositories-response.dto";
+import { RateLimiterOptions } from "./presentation/middlewares";
 
+// Initialize dependencies
 const logger = new WinstonLogger();
 const cache = new InMemoryCacheService<SearchPopularRepositoriesResponseDto>();
+const rateLimiterOptions: RateLimiterOptions = {
+  windowMs: env.REPOSITORY_ROUTE_WINDOW_MS,
+  maxRequests: env.REPOSITORY_ROUTE_MAX_REQUESTS,
+};
 
 const githubClient = new GitHubClient(logger, {
   baseURL: env.GITHUB_API_URL,
   timeoutMs: env.GITHUB_TIMEOUT_MS,
 });
-
 const weightedScoringStrategy = new WeightedScoringStrategy();
-
 const searchPopularRepositoriesService = new SearchPopularRepositoriesService(
   githubClient,
   weightedScoringStrategy,
@@ -24,7 +28,12 @@ const searchPopularRepositoriesService = new SearchPopularRepositoriesService(
   cache,
 );
 
-const app = createApp(searchPopularRepositoriesService, logger);
+// Create and start the Express app
+const app = createApp(
+  searchPopularRepositoriesService,
+  logger,
+  rateLimiterOptions,
+);
 
 app.listen(env.PORT, () => {
   logger.info(

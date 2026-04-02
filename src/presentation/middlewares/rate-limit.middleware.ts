@@ -1,22 +1,36 @@
-import { WinstonLogger } from "@/shared/logger";
+import type { ILogger } from "@/application/ports/ILogger";
 import { rateLimit } from "express-rate-limit";
 
-const logger = new WinstonLogger();
+export interface RateLimiterOptions {
+  windowMs?: number;
+  maxRequests?: number;
+}
 
-export const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minutes
-  limit: 10, // Limit each IP to 10 requests per `window` (here, per 1 minutes).
-  standardHeaders: "draft-8", // draft-6: `RateLimit-*` headers; draft-7 & draft-8: combined `RateLimit` header
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers.
-  ipv6Subnet: 56, // Set to 60 or 64 to be less aggressive, or 52 or 48 to be more aggressive
-  handler: (_request, response) => {
-    logger.warn("Rate limit exceeded for IP", {
-      ip: _request.ip,
-      method: _request.method,
-      query: _request.query,
-    });
-    response.status(429).json({
-      error: "Too many requests, please try again later.",
-    });
-  },
-});
+export function createRepositoryRateLimiter(
+  windowMs = 60_000,
+  maxRequests = 10,
+  logger: ILogger,
+) {
+  return rateLimit({
+    windowMs,
+    limit: maxRequests,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    ipv6Subnet: 56,
+    handler: (request, response, _next, optionsUsed) => {
+      logger.warn("Request rate limit exceeded", {
+        path: request.path,
+        method: request.method,
+        clientIp: request.ip,
+        maxRequests,
+        windowMs,
+      });
+      const retryAfterSec = Math.ceil(optionsUsed.windowMs / 1000);
+      response.setHeader("Retry-After", String(retryAfterSec));
+      response.status(429).json({
+        error: "RateLimitError",
+        message: "Too many requests. Please try again later.",
+      });
+    },
+  });
+}
