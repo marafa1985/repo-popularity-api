@@ -12,8 +12,8 @@ import { RateLimiterOptions } from "./presentation/middlewares";
 const logger = new WinstonLogger();
 const cache = new InMemoryCacheService<SearchPopularRepositoriesResponseDto>();
 const rateLimiterOptions: RateLimiterOptions = {
-  windowMs: env.REPOSITORY_ROUTE_WINDOW_MS,
-  maxRequests: env.REPOSITORY_ROUTE_MAX_REQUESTS,
+  windowMs: env.RATE_LIMIT_WINDOW_MS,
+  maxRequests: env.RATE_LIMIT_MAX_REQUESTS,
 };
 
 const githubClient = new GitHubClient(logger, {

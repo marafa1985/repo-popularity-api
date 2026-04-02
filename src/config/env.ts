@@ -7,8 +7,8 @@ const envSchema = z.object({
   LOG_DIR: z.string().default("./logs"),
   GITHUB_API_URL: z.string().default("https://api.github.com"),
   GITHUB_TIMEOUT_MS: z.coerce.number().default(5000),
-  REPOSITORY_ROUTE_WINDOW_MS: z.coerce.number().default(60000),
-  REPOSITORY_ROUTE_MAX_REQUESTS: z.coerce.number().default(10),
+  RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
+  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(10),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

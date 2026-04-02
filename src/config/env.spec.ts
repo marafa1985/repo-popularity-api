@@ -9,8 +9,8 @@ describe("loadEnv", () => {
       LOG_DIR: "./logs",
       GITHUB_API_URL: "https://api.github.com",
       GITHUB_TIMEOUT_MS: 5000,
-      REPOSITORY_ROUTE_WINDOW_MS: 60000,
-      REPOSITORY_ROUTE_MAX_REQUESTS: 10,
+      RATE_LIMIT_WINDOW_MS: 60000,
+      RATE_LIMIT_MAX_REQUESTS: 10,
     });
   });
 });
