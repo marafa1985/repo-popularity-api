@@ -24,7 +24,7 @@ const searchPopularRepositoriesService = new SearchPopularRepositoriesService(
   cache,
 );
 
-const app = createApp(searchPopularRepositoriesService);
+const app = createApp(searchPopularRepositoriesService, logger);
 
 app.listen(env.PORT, () => {
   logger.info(
