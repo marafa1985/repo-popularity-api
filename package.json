@@ -6,13 +6,15 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/main.ts",
     "build": "tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-    "start": "node dist/main.js",
+    "start": "npm run build && node dist/main.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "jest --runInBand --config jest.config.cjs",
-    "test:cov": "jest --coverage --config jest.config.cjs"
+    "test:cov": "jest --coverage --config jest.config.cjs",
+    "security:audit": "npm audit --audit-level moderate --registry https://registry.npmjs.org/",
+    "security:audit:fix": "npm audit --fix --registry https://registry.npmjs.org/"
   },
   "keywords": [],
   "author": "",
