@@ -30,4 +30,7 @@ app.listen(env.PORT, () => {
   logger.info(
     `Server is running on port ${env.PORT}, open http://localhost:${env.PORT} to view it in the browser.`,
   );
+  logger.info(
+    `- Open http://localhost:${env.PORT}/api-docs for API documentation.`,
+  );
 });
