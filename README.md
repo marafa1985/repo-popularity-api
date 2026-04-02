@@ -7,16 +7,18 @@ I built this as a focused API exercise: take GitHub's search results, apply a sc
 ## What It Actually Does
 
 - Exposes `GET /api/v1/repositories/popularity`
+- Exposes `GET /health` (liveness)
 - Calls the GitHub Search API with `language` and `createdAfter`
 - Scores each result using stars, forks, and recent activity
-- Returns pagination metadata along with the scored repositories
+- Returns pagination metadata, optional `incompleteResults` when GitHub flags incomplete search results, and the scored repositories
 - Serves Swagger docs at `/api-docs`
+- Loads variables from `.env` on startup (via `dotenv`), sets baseline HTTP security headers (`helmet`), and echoes/generates an `X-Request-Id` correlation id for each request
 
 ## A Couple Of Tradeoffs
 
 - The popularity score is heuristic. It is useful for ranking, but it is not meant to be an objective measure of repository quality.
 - GitHub search only lets you page through the first `1000` matching results, so this API validates that limit up front.
-- The cache is in-memory, which keeps the project simple but means cached data disappears on restart.
+- The cache is in-memory, which keeps the project simple but means cached data disappears on restart. It uses a TTL and a bounded size with LRU eviction to cap memory growth. Concurrent identical misses are coalesced so only one upstream fetch runs per cache key.
 
 ## Stack
 
@@ -56,6 +58,13 @@ Try this once it is running:
 curl "http://localhost:3000/api/v1/repositories/popularity?createdAfter=2026-01-01&language=TypeScript&page=1&perPage=10"
 ```
 
+### Docker
+
+```bash
+docker build -t repo-popularity-api .
+docker run --rm -p 3000:3000 --env-file .env repo-popularity-api
+```
+
 ## Scripts
 
 - `npm run dev` starts the app in watch mode
@@ -77,10 +86,12 @@ curl "http://localhost:3000/api/v1/repositories/popularity?createdAfter=2026-01-
 - `GITHUB_API_URL`: GitHub API base URL
 - `GITHUB_TIMEOUT_MS`: upstream GitHub request timeout in milliseconds, defaults to `5000`
 - `CACHE_TTL_SECONDS`: in-memory cache TTL, defaults to `300`
+- `CACHE_MAX_ENTRIES`: maximum number of entries retained in the in-memory cache; when full, the least-recently-used entry is evicted, defaults to `5000`
 - `LOG_LEVEL`: Winston log level
 - `LOG_DIR`: directory for log files
 - `RATE_LIMIT_WINDOW_MS`: rate-limit window in milliseconds, defaults to `60000`
 - `RATE_LIMIT_MAX_REQUESTS`: maximum requests per client IP within the window, defaults to `10`
+- `TRUST_PROXY`: set to `true` or `1` when the app runs behind a reverse proxy so Express honors `X-Forwarded-*` for `request.ip` (used by rate limiting), defaults to `false`
 
 ## API Contract
 
@@ -105,7 +116,14 @@ Response shape:
 - `pagination.perPage`: requested page size
 - `pagination.totalCount`: total number of upstream matches reported by GitHub
 - `pagination.returnedCount`: number of scored items returned in the current response
+- `incompleteResults`: `true` when GitHub indicates search results may be incomplete
 - `items`: repositories sorted by `popularityScore` descending
+
+Operational endpoints:
+
+- `GET /health` returns `{ "status": "ok" }` for process liveness.
+
+The process handles `SIGINT` and `SIGTERM` by stopping the HTTP server before exit (with a hard kill after ten seconds if necessary).
 
 Rate limiting:
 

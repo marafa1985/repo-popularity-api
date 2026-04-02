@@ -84,7 +84,7 @@ export const openApiDocument = {
       },
       SearchPopularRepositoriesResponse: {
         type: "object",
-        required: ["filters", "pagination", "items"],
+        required: ["filters", "pagination", "items", "incompleteResults"],
         properties: {
           filters: {
             type: "object",
@@ -132,6 +132,12 @@ export const openApiDocument = {
             items: {
               $ref: "#/components/schemas/ScoredRepository",
             },
+          },
+          incompleteResults: {
+            type: "boolean",
+            description:
+              "True when GitHub indicated the search results may be incomplete (timeout).",
+            example: false,
           },
         },
       },
@@ -255,7 +261,8 @@ export const openApiDocument = {
             },
           },
           "429": {
-            description: "GitHub API rate limit reached.",
+            description:
+              "Application rate limit exceeded or GitHub API rate limit reached.",
             content: {
               "application/json": {
                 schema: {
