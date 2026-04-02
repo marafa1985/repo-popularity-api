@@ -3,8 +3,11 @@ import swaggerUi from "swagger-ui-express";
 import { createRepositoryRoutes } from "@/presentation/routes/repository.routes";
 import { SearchPopularRepositoriesService } from "@/application/services/search-popular-repositories.service";
 import { ILogger } from "@/application/ports/ILogger";
-import { createRequestLogger } from "./middlewares/request-logger.middleware";
-import { createErrorHandler } from "./middlewares/error-handler.middleware";
+import {
+  createRequestLogger,
+  limiter,
+  createErrorHandler,
+} from "./middlewares";
 import { openApiDocument } from "./openapi/open-api-document";
 
 export function createApp(
@@ -12,7 +15,7 @@ export function createApp(
   logger: ILogger,
 ) {
   const app = express();
-
+  app.use(limiter);
   app.use(express.json());
   app.use(createRequestLogger(logger));
   app.get("/health", (_request, response) => {
