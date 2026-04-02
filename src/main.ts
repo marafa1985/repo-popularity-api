@@ -19,6 +19,7 @@ const weightedScoringStrategy = new WeightedScoringStrategy();
 const searchPopularRepositoriesService = new SearchPopularRepositoriesService(
   githubClient,
   weightedScoringStrategy,
+  logger,
 );
 
 const app = createApp(searchPopularRepositoriesService);

@@ -1,11 +1,11 @@
 import {
+  validateSearchRepositoriesInput,
   type SearchRepositoriesInput,
-  searchRepositoriesInputSchema,
 } from "@/application/dto/SearchRepositoriesInput";
 import type { SearchPopularRepositoriesResponse } from "@/application/dto/SearchPopularRepositoriesResponse";
 import type { SearchRepositoriesResponse } from "@/application/dto/SearchRepositoriesResponse";
 import type { Repository } from "@/application/domain/entities/Repository";
-import { ValidationError } from "@/application/domain/errors/ApplicationError";
+import { ILogger } from "../ports/ILogger";
 
 type RepositorySearchClient = {
   searchRepositories(
@@ -21,20 +21,18 @@ export class SearchPopularRepositoriesService {
   constructor(
     private readonly repositoryClient: RepositorySearchClient,
     private readonly scoringService: RepositoryScorer,
+    private readonly logger: ILogger,
   ) {}
 
   async execute(
     query: SearchRepositoriesInput,
   ): Promise<SearchPopularRepositoriesResponse> {
-    const parsed = searchRepositoriesInputSchema.safeParse(query);
-    if (!parsed.success) {
-      const message = parsed.error.issues.map((issue) => issue.message).join("; ");
-      throw new ValidationError(message);
-    }
-    const validated = parsed.data;
+    const parsedQuery = this.validateQuery(query);
+
+    this.logSearchRepositoriesInfo(parsedQuery);
 
     const repositories =
-      await this.repositoryClient.searchRepositories(validated);
+      await this.repositoryClient.searchRepositories(parsedQuery);
 
     const scoredRepositories = repositories.items
       .map((repository) => ({
@@ -45,18 +43,48 @@ export class SearchPopularRepositoriesService {
 
     const response: SearchPopularRepositoriesResponse = {
       filters: {
-        createdAfter: validated.createdAfter,
-        language: validated.language,
+        createdAfter: parsedQuery.createdAfter,
+        language: parsedQuery.language,
       },
       pagination: {
-        page: validated.page,
-        perPage: validated.perPage,
+        page: parsedQuery.page,
+        perPage: parsedQuery.perPage,
         totalCount: repositories.totalCount,
         returnedCount: scoredRepositories.length,
       },
       items: scoredRepositories,
     };
 
+    this.logger.debug("Cached scored repositories", {
+      count: scoredRepositories.length,
+    });
+
     return response;
+  }
+
+  private validateQuery(
+    query: SearchRepositoriesInput,
+  ): SearchRepositoriesInput {
+    try {
+      return validateSearchRepositoriesInput(query);
+    } catch (error) {
+      this.logger.error("Invalid search repositories query", {
+        query,
+        message:
+          error instanceof Error ? error.message : "Unknown validation error",
+      });
+
+      throw error;
+    }
+  }
+
+  private logSearchRepositoriesInfo(query: SearchRepositoriesInput): void {
+    this.logger.info("Fetching repositories from search client", {
+      clientId: "github",
+      language: query.language,
+      createdAfter: query.createdAfter,
+      page: query.page,
+      perPage: query.perPage,
+    });
   }
 }
