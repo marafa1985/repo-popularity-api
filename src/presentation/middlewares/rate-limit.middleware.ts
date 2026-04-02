@@ -19,6 +19,7 @@ export function createRepositoryRateLimiter(
     ipv6Subnet: 56,
     handler: (request, response, _next, optionsUsed) => {
       logger.warn("Request rate limit exceeded", {
+        requestId: request.requestId,
         path: request.path,
         method: request.method,
         clientIp: request.ip,

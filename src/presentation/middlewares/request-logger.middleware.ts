@@ -8,6 +8,7 @@ export function createRequestLogger(logger: ILogger) {
 
     response.on("finish", () => {
       logger.info("HTTP request completed", {
+        requestId: request.requestId,
         method: request.method,
         path: request.path,
         statusCode: response.statusCode,

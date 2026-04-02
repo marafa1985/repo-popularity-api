@@ -19,6 +19,7 @@ export function createErrorHandler(logger: ILogger) {
     }
 
     logger.error("Unhandled application error", {
+      requestId: _request.requestId,
       message: error.message,
       stack: error.stack,
     });

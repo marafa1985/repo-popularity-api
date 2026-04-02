@@ -1,4 +1,5 @@
 import request from "supertest";
+import nock from "nock";
 
 import {
   ValidationError,
@@ -8,6 +9,9 @@ import { createApp } from "@/presentation/app";
 import type { ILogger } from "@/application/ports/ILogger";
 import type { SearchPopularRepositoriesResponseDto } from "@/application/dto/search-popular-repositories-response.dto";
 import { SearchPopularRepositoriesService } from "@/application/services/search-popular-repositories.service";
+import { GitHubClient } from "@/application/services/repository-clients/github/github.client";
+import { WeightedScoringStrategy } from "@/application/services/score-strategy/weighted-scoring.strategy";
+import { InMemoryCacheService } from "@/shared/cache/in-memory-cache.service";
 
 describe("createApp", () => {
   const createLogger = (): ILogger => ({
@@ -24,6 +28,73 @@ describe("createApp", () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    nock.cleanAll();
+  });
+
+  it("exposes a liveness health endpoint", async () => {
+    const app = createApp(createService(), createLogger());
+    const response = await request(app).get("/health");
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ status: "ok" });
+  });
+
+  it("validates query parameters inside the real service before calling GitHub", async () => {
+    const logger = createLogger();
+    const base = "https://github-validation.test";
+    const githubClient = new GitHubClient(logger, { baseURL: base });
+    const search = jest.spyOn(githubClient, "searchRepositories");
+    const service = new SearchPopularRepositoriesService(
+      githubClient,
+      new WeightedScoringStrategy(),
+      logger,
+      new InMemoryCacheService<SearchPopularRepositoriesResponseDto>(),
+    );
+    const app = createApp(service, logger);
+
+    const response = await request(app)
+      .get("/api/v1/repositories/popularity")
+      .query({
+        createdAfter: "2026-03-01",
+        language: "TypeScript",
+        page: "1",
+        perPage: "500",
+      });
+
+    expect(response.status).toBe(400);
+    expect(search).not.toHaveBeenCalled();
+  });
+
+  it("propagates x-request-id when provided", async () => {
+    const service = createService();
+    jest.spyOn(service, "execute").mockResolvedValue({
+      filters: { createdAfter: "2026-03-01", language: "TypeScript" },
+      pagination: {
+        page: 1,
+        perPage: 10,
+        totalCount: 0,
+        returnedCount: 0,
+      },
+      incompleteResults: false,
+      items: [],
+    });
+    const logger = createLogger();
+    const app = createApp(service, logger);
+    const id = "client-correlation-id-99";
+    const response = await request(app)
+      .get("/api/v1/repositories/popularity")
+      .set("X-Request-Id", id)
+      .query({
+        createdAfter: "2026-03-01",
+        language: "TypeScript",
+        page: "1",
+        perPage: "10",
+      });
+    expect(response.status).toBe(200);
+    expect(response.headers["x-request-id"]).toBe(id);
+    expect(logger.info).toHaveBeenCalledWith(
+      "HTTP request completed",
+      expect.objectContaining({ requestId: id }),
+    );
   });
 
   it("returns repositories from the search service", async () => {
@@ -38,6 +109,7 @@ describe("createApp", () => {
         totalCount: 1,
         returnedCount: 1,
       },
+      incompleteResults: false,
       items: [
         {
           id: 1,
@@ -148,6 +220,7 @@ describe("createApp", () => {
       message: "An unexpected error occurred.",
     });
     expect(logger.error).toHaveBeenCalledWith("Unhandled application error", {
+      requestId: expect.any(String),
       message: "Unexpected failure",
       stack: error.stack,
     });
@@ -167,6 +240,7 @@ describe("createApp", () => {
         totalCount: 1,
         returnedCount: 0,
       },
+      incompleteResults: false,
       items: [],
     });
     const app = createApp(service, logger, {
@@ -201,6 +275,7 @@ describe("createApp", () => {
     expect(thirdResponse.headers["retry-after"]).toBe("60");
     expect(service.execute).toHaveBeenCalledTimes(2);
     expect(logger.warn).toHaveBeenCalledWith("Request rate limit exceeded", {
+      requestId: expect.any(String),
       path: "/popularity",
       method: "GET",
       clientIp: expect.any(String),
