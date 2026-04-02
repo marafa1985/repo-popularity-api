@@ -3,14 +3,15 @@ import {
   type SearchRepositoriesQueryDto,
 } from "@/application/dto/search-repositories-query.dto";
 import type { SearchPopularRepositoriesResponseDto } from "@/application/dto/search-popular-repositories-response.dto";
-import type { SearchRepositoriesResponse } from "@/application/dto/scored-repository.dto";
+import type { SearchRepositoriesResponseDto } from "@/application/dto/scored-repository.dto";
 import type { Repository } from "@/application/domain/entities/repository";
 import { ILogger } from "../ports/ILogger";
+import { ICache } from "../ports/ICache";
 
 type RepositorySearchClient = {
   searchRepositories(
     query: SearchRepositoriesQueryDto,
-  ): Promise<SearchRepositoriesResponse>;
+  ): Promise<SearchRepositoriesResponseDto>;
 };
 
 type RepositoryScorer = {
@@ -22,12 +23,19 @@ export class SearchPopularRepositoriesService {
     private readonly repositoryClient: RepositorySearchClient,
     private readonly scoringService: RepositoryScorer,
     private readonly logger: ILogger,
+    private readonly cache: ICache<SearchPopularRepositoriesResponseDto>,
   ) {}
 
   async execute(
     query: SearchRepositoriesQueryDto,
   ): Promise<SearchPopularRepositoriesResponseDto> {
     const parsedQuery = this.validateQuery(query);
+    const cacheKey = this.buildCacheKey(parsedQuery);
+
+    if (this.cache.has(cacheKey)) {
+      this.logger.info("Returning cached repositories", { cacheKey });
+      return this.cache.get(cacheKey) as SearchPopularRepositoriesResponseDto;
+    }
 
     this.logSearchRepositoriesInfo(parsedQuery);
 
@@ -55,7 +63,9 @@ export class SearchPopularRepositoriesService {
       items: scoredRepositories,
     };
 
+    this.cache.set(cacheKey, response);
     this.logger.debug("Cached scored repositories", {
+      cacheKey,
       count: scoredRepositories.length,
     });
 
@@ -76,6 +86,10 @@ export class SearchPopularRepositoriesService {
 
       throw error;
     }
+  }
+
+  private buildCacheKey(query: SearchRepositoriesQueryDto): string {
+    return `popular-repos:${query.language}:${query.createdAfter}:${query.page}:${query.perPage}`;
   }
 
   private logSearchRepositoriesInfo(query: SearchRepositoriesQueryDto): void {

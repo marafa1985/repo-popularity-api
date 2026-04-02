@@ -5,9 +5,10 @@ import { createApp } from "./presentation/app";
 import { GitHubClient } from "./application/services/repository-clients/github/github.client";
 import { WeightedScoringStrategy } from "./application/services/score-strategy/weighted-scoring.strategy";
 import { SearchPopularRepositoriesService } from "./application/services/search-popular-repositories.service";
+import { SearchPopularRepositoriesResponseDto } from "./application/dto/search-popular-repositories-response.dto";
 
 const logger = new WinstonLogger();
-const cache = new InMemoryCacheService<string>();
+const cache = new InMemoryCacheService<SearchPopularRepositoriesResponseDto>();
 
 const githubClient = new GitHubClient(logger, {
   baseURL: env.GITHUB_API_URL,
@@ -20,6 +21,7 @@ const searchPopularRepositoriesService = new SearchPopularRepositoriesService(
   githubClient,
   weightedScoringStrategy,
   logger,
+  cache,
 );
 
 const app = createApp(searchPopularRepositoriesService);

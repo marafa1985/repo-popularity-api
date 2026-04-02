@@ -2,7 +2,7 @@ import type { SearchRepositoriesQueryDto } from "@/application/dto/search-reposi
 import axios from "axios";
 
 import type { ILogger } from "@/application/ports/ILogger";
-import type { SearchRepositoriesResponse } from "@/application/dto/scored-repository.dto";
+import type { SearchRepositoriesResponseDto } from "@/application/dto/scored-repository.dto";
 import type { Repository } from "@/application/domain/entities/repository";
 import {
   GitHubApiError,
@@ -38,7 +38,7 @@ export class GitHubClient {
 
   async searchRepositories(
     query: SearchRepositoriesQueryDto,
-  ): Promise<SearchRepositoriesResponse> {
+  ): Promise<SearchRepositoriesResponseDto> {
     try {
       const response = await this.httpClient.get<GitHubSearchResponseDTO>(
         "/search/repositories",

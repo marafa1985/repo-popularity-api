@@ -1,6 +1,6 @@
 import { Repository } from "@/application/domain/entities/repository";
 
-export interface SearchRepositoriesResponse {
+export interface SearchRepositoriesResponseDto {
   items: Repository[];
   totalCount: number;
 }
